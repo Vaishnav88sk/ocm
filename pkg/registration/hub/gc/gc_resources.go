@@ -50,16 +50,30 @@ func (r *gcResourcesController) reconcile(ctx context.Context,
 	var errs []error
 	// delete the resources in order. to delete the next resource after all resource instances are deleted.
 	for _, resourceGVR := range r.resourceGVRList {
-		resourceList, err := r.metadataClient.Resource(resourceGVR).
-			Namespace(clusterNamespace).List(ctx, metav1.ListOptions{})
-		if errors.IsNotFound(err) {
+		var allItems []metav1.PartialObjectMetadata
+		listOpts := metav1.ListOptions{Limit: 500}
+		for {
+			resourceList, err := r.metadataClient.Resource(resourceGVR).
+				Namespace(clusterNamespace).List(ctx, listOpts)
+			if errors.IsNotFound(err) {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("failed to list resource %v. err:%v", resourceGVR.Resource, err)
+			}
+			allItems = append(allItems, resourceList.Items...)
+			if resourceList.Continue == "" {
+				break
+			}
+			listOpts.Continue = resourceList.Continue
+		}
+
+		if len(allItems) == 0 {
 			continue
 		}
-		if err != nil {
-			return fmt.Errorf("failed to list resource %v. err:%v", resourceGVR.Resource, err)
-		}
-		if len(resourceList.Items) == 0 {
-			continue
+
+		resourceList := &metav1.PartialObjectMetadataList{
+			Items: allItems,
 		}
 
 		if cluster != nil {
