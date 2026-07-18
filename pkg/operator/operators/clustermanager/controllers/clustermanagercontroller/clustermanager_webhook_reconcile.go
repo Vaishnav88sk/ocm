@@ -26,13 +26,23 @@ import (
 var (
 	// The hubWebhookResourceFiles should be deployed in the hub cluster
 	// The service should may point to a external url which represent the webhook-server's address.
-	hubRegistrationWebhookResourceFiles = []string{
-		"cluster-manager/hub/registration/webhook-validatingconfiguration.yaml",
+	hubRegistrationMutatingWebhookResourceFiles = []string{
 		"cluster-manager/hub/registration/webhook-mutatingconfiguration.yaml",
+	}
+	hubRegistrationValidatingWebhookResourceFiles = []string{
+		"cluster-manager/hub/registration/webhook-validatingconfiguration.yaml",
 		"cluster-manager/hub/registration/webhook-clustersetbinding-validatingconfiguration.yaml",
 	}
 	hubWorkWebhookResourceFiles = []string{
 		"cluster-manager/hub/work/webhook-validatingconfiguration.yaml",
+	}
+	hubRegistrationValidatingAdmissionPolicyResourceFiles = []string{
+		"cluster-manager/hub/registration/managedcluster-validatingadmissionpolicy.yaml",
+		"cluster-manager/hub/registration/managedcluster-validatingadmissionpolicybinding.yaml",
+	}
+	hubWorkValidatingAdmissionPolicyResourceFiles = []string{
+		"cluster-manager/hub/work/manifestwork-validatingadmissionpolicy.yaml",
+		"cluster-manager/hub/work/manifestwork-validatingadmissionpolicybinding.yaml",
 	}
 )
 
@@ -52,8 +62,16 @@ func (c *webhookReconcile) reconcile(ctx context.Context, cm *operatorapiv1.Clus
 		return cm, reconcileStop, commonhelpers.NewRequeueError("Deployment is not ready", clusterManagerReSyncTime)
 	}
 
-	webhookResources := hubRegistrationWebhookResourceFiles
-	webhookResources = append(webhookResources, hubWorkWebhookResourceFiles...)
+	webhookResources := hubRegistrationMutatingWebhookResourceFiles
+	
+	if config.CELValidationEnabled {
+		webhookResources = append(webhookResources, hubRegistrationValidatingAdmissionPolicyResourceFiles...)
+		webhookResources = append(webhookResources, hubWorkValidatingAdmissionPolicyResourceFiles...)
+	} else {
+		webhookResources = append(webhookResources, hubRegistrationValidatingWebhookResourceFiles...)
+		webhookResources = append(webhookResources, hubWorkWebhookResourceFiles...)
+	}
+
 	// If all webhook pod running , then apply webhook config files
 	resourceResults := helpers.ApplyDirectly(
 		ctx,
@@ -95,7 +113,10 @@ func (c *webhookReconcile) reconcile(ctx context.Context, cm *operatorapiv1.Clus
 func (c *webhookReconcile) clean(ctx context.Context, cm *operatorapiv1.ClusterManager,
 	config manifests.HubConfig) (*operatorapiv1.ClusterManager, reconcileState, error) {
 	// Remove All webhook files
-	webhookResources := hubRegistrationWebhookResourceFiles
+	webhookResources := hubRegistrationMutatingWebhookResourceFiles
+	webhookResources = append(webhookResources, hubRegistrationValidatingWebhookResourceFiles...)
 	webhookResources = append(webhookResources, hubWorkWebhookResourceFiles...)
+	webhookResources = append(webhookResources, hubRegistrationValidatingAdmissionPolicyResourceFiles...)
+	webhookResources = append(webhookResources, hubWorkValidatingAdmissionPolicyResourceFiles...)
 	return cleanResources(ctx, c.kubeClient, cm, config, webhookResources...)
 }

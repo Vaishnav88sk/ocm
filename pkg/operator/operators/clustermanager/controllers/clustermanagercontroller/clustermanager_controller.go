@@ -207,6 +207,7 @@ func (n *clusterManagerController) sync(ctx context.Context, controllerContext f
 			config.ImporterRenderers = strings.Join(clusterManager.Spec.RegistrationConfiguration.ImporterConfiguration.Renderers, ",")
 		}
 	}
+	config.CELValidationEnabled = helpers.FeatureGateEnabled(registrationFeatureGates, ocmfeature.DefaultHubRegistrationFeatureGates, ocmfeature.CELValidation)
 
 	var workFeatureGates []operatorapiv1.FeatureGate
 	if clusterManager.Spec.WorkConfiguration != nil {

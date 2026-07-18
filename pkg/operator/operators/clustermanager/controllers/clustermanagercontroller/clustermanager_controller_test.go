@@ -728,7 +728,7 @@ func TestSyncDelete(t *testing.T) {
 	now := metav1.Now()
 	clusterManager.ObjectMeta.SetDeletionTimestamp(&now)
 
-	assertDeletion(t, clusterManager, 32, 16)
+	assertDeletion(t, clusterManager, 36, 16)
 }
 
 func TestSyncDeleteWithGRPCAuthEnabled(t *testing.T) {
@@ -745,7 +745,7 @@ func TestSyncDeleteWithGRPCAuthEnabled(t *testing.T) {
 	}
 	now := metav1.Now()
 	clusterManager.ObjectMeta.SetDeletionTimestamp(&now)
-	assertDeletion(t, clusterManager, 36, 16)
+	assertDeletion(t, clusterManager, 40, 16)
 }
 
 // TestDeleteCRD test delete crds

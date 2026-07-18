@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: managedcluster-validation.open-cluster-management.io
+  labels:
+    {{ if gt (len .Labels) 0 }}
+    {{ range $key, $value := .Labels }}
+    "{{ $key }}": "{{ $value }}"
+    {{ end }}
+    {{ end }}
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["cluster.open-cluster-management.io"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE", "UPDATE"]
+      resources:   ["managedclusters"]
+  validations:
+    - expression: >-
+        !has(object.spec.hubAcceptsClient) || object.spec.hubAcceptsClient == false ||
+        authorizer.requestResource.check("accept").allowed()
+      message: "You do not have permission to accept the client."

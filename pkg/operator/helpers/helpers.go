@@ -148,6 +148,10 @@ func CleanUpStaticObject(
 		err = client.AdmissionregistrationV1().ValidatingWebhookConfigurations().Delete(ctx, t.Name, metav1.DeleteOptions{})
 	case *admissionv1.MutatingWebhookConfiguration:
 		err = client.AdmissionregistrationV1().MutatingWebhookConfigurations().Delete(ctx, t.Name, metav1.DeleteOptions{})
+	case *admissionv1.ValidatingAdmissionPolicy:
+		err = client.AdmissionregistrationV1().ValidatingAdmissionPolicies().Delete(ctx, t.Name, metav1.DeleteOptions{})
+	case *admissionv1.ValidatingAdmissionPolicyBinding:
+		err = client.AdmissionregistrationV1().ValidatingAdmissionPolicyBindings().Delete(ctx, t.Name, metav1.DeleteOptions{})
 	default:
 		err = fmt.Errorf("unhandled type %T", object)
 	}
@@ -475,6 +479,10 @@ func GenerateRelatedResource(objBytes []byte) (operatorapiv1.RelatedResourceMeta
 		relatedResource = newRelatedResource(admissionv1.SchemeGroupVersion.WithResource("validatingwebhookconfigurations"), requiredObj)
 	case *admissionv1.MutatingWebhookConfiguration:
 		relatedResource = newRelatedResource(admissionv1.SchemeGroupVersion.WithResource("mutatingwebhookconfigurations"), requiredObj)
+	case *admissionv1.ValidatingAdmissionPolicy:
+		relatedResource = newRelatedResource(admissionv1.SchemeGroupVersion.WithResource("validatingadmissionpolicies"), requiredObj)
+	case *admissionv1.ValidatingAdmissionPolicyBinding:
+		relatedResource = newRelatedResource(admissionv1.SchemeGroupVersion.WithResource("validatingadmissionpolicybindings"), requiredObj)
 	case *apiregistrationv1.APIService:
 		relatedResource = newRelatedResource(apiregistrationv1.SchemeGroupVersion.WithResource("apiservices"), requiredObj)
 	case *appsv1.Deployment:

@@ -35,6 +35,7 @@ type HubConfig struct {
 	AutoApproveUsers               string
 	ImagePullSecret                string
 	ImagePullSecretName            string
+	CELValidationEnabled           bool
 	// ResourceRequirementResourceType is the resource requirement resource type for the cluster manager managed containers.
 	ResourceRequirementResourceType operatorapiv1.ResourceQosClass
 	// ResourceRequirements is the resource requirements for the cluster manager managed containers.
